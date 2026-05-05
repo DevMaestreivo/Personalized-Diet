@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NutriPlan — Dietitian Meal Planner</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root {
+    --sage: #6b8f71;
+    --sage-light: #a8c5ad;
+    --sage-pale: #e8f0e9;
+    --cream: #faf7f2;
+    --warm-white: #fff9f0;
+    --charcoal: #2c2c2c;
+    --mid: #5a5a5a;
+    --muted: #9a9a9a;
+    --border: #dde5de;
+    --meal-bg: #f4f8f4;
+    --snack-bg: #fdf6ee;
+    --snack-accent: #d4956a;
+    --danger: #c0392b;
+    --shadow: 0 4px 24px rgba(107,143,113,0.10);
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--charcoal);
+    min-height: 100vh;
+  }
+
+  /* ─── TOP BAR ─── */
+  header {
+    background: white;
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .header-logo-area {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: var(--sage-pale);
+    border: 2px dashed var(--sage-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    overflow: hidden;
+    transition: all .2s;
+    position: relative;
+  }
+  .header-logo-area:hover { border-color: var(--sage); }
+  .header-logo-area img { width: 100%; height: 100%; object-fit: contain; }
+  .header-logo-area .logo-placeholder {
+    font-size: 10px;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.3;
+    padding: 4px;
+  }
+  #logo-input { display: none; }
+
+  .brand-text h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--charcoal);
+  }
+  .brand-text p { font-size: 12px; color: var(--muted); }
+
+  .header-actions { display: flex; gap: 10px; }
+
+  /* ─── MAIN LAYOUT ─── */
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  /* ─── SECTION CARDS ─── */
+  .card {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--charcoal);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card-title .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--sage);
+    flex-shrink: 0;
+  }
+
+  /* ─── LOGO UPLOAD CARD ─── */
+  .logo-upload-zone {
+    border: 2px dashed var(--sage-light);
+    border-radius: 12px;
+    padding: 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+    background: var(--sage-pale);
+    position: relative;
+    overflow: hidden;
+  }
+  .logo-upload-zone:hover { border-color: var(--sage); background: #dff0e0; }
+  .logo-upload-zone.has-logo { border-style: solid; border-color: var(--sage); }
+  .logo-upload-zone img {
+    max-height: 100px;
+    max-width: 100%;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto 12px;
+  }
+  .logo-upload-zone .upload-hint {
+    font-size: 13px;
+    color: var(--mid);
+  }
+  .logo-upload-zone .upload-icon {
+    font-size: 32px;
+    margin-bottom: 10px;
+  }
+  .logo-remove {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--danger);
+    cursor: pointer;
+    text-decoration: underline;
+  }
+
+  /* ─── FORM FIELDS ─── */
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .form-row.three { grid-template-columns: 1fr 1fr 1fr; }
+  .form-row.full { grid-template-columns: 1fr; }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--mid);
+    letter-spacing: .5px;
+    text-transform: uppercase;
+  }
+  input[type=text], input[type=date], input[type=number], textarea, select {
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--charcoal);
+    background: white;
+    transition: border-color .2s;
+    outline: none;
+    width: 100%;
+  }
+  input:focus, textarea:focus, select:focus { border-color: var(--sage); box-shadow: 0 0 0 3px rgba(107,143,113,.12); }
+  textarea { resize: vertical; min-height: 70px; }
+
+  /* ─── MEALS SECTION ─── */
+  .meal-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .meal-count-label { font-size: 13px; color: var(--mid); }
+  .count-btn {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: white;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--sage);
+    transition: all .15s;
+    font-weight: 600;
+    line-height: 1;
+  }
+  .count-btn:hover { background: var(--sage); color: white; border-color: var(--sage); }
+  .count-display {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--sage);
+    width: 32px;
+    text-align: center;
+  }
+
+  /* ─── INDIVIDUAL MEAL CARD ─── */
+  .meal-item {
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 14px;
+    border: 1.5px solid transparent;
+    transition: all .2s;
+    position: relative;
+  }
+  .meal-item.meal-type { background: var(--meal-bg); border-color: #c8ddc9; }
+  .meal-item.snack-type { background: var(--snack-bg); border-color: #e8cdb5; }
+
+  .meal-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .meal-badge {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .8px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+  .meal-type .meal-badge { background: var(--sage); color: white; }
+  .snack-type .meal-badge { background: var(--snack-accent); color: white; }
+
+  .meal-name-input {
+    flex: 1;
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  /* ─── BUTTONS ─── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all .2s;
+    text-decoration: none;
+  }
+  .btn-primary {
+    background: var(--sage);
+    color: white;
+    box-shadow: 0 4px 14px rgba(107,143,113,.35);
+  }
+  .btn-primary:hover { background: #59796e; box-shadow: 0 6px 20px rgba(107,143,113,.4); transform: translateY(-1px); }
+  .btn-outline {
+    background: white;
+    color: var(--sage);
+    border: 1.5px solid var(--sage);
+  }
+  .btn-outline:hover { background: var(--sage-pale); }
+  .btn-danger { background: #fdf0ef; color: var(--danger); border: 1.5px solid #f5c5c1; }
+  .btn-danger:hover { background: #fce0de; }
+
+  .btn-lg { padding: 16px 36px; font-size: 16px; border-radius: 12px; }
+
+  .bottom-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: white;
+    border-top: 1px solid var(--border);
+    padding: 16px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 -4px 20px rgba(0,0,0,.07);
+    z-index: 100;
+  }
+  .bottom-bar-info { font-size: 13px; color: var(--muted); }
+
+  /* ─── NOTES / EXTRAS ─── */
+  .section-sep {
+    height: 1px;
+    background: var(--border);
+    margin: 24px 0;
+  }
+
+  /* ─── PREVIEW MODAL ─── */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.5);
+    z-index: 500;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 480px;
+    width: 90%;
+    text-align: center;
+  }
+  .modal h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    margin-bottom: 12px;
+  }
+  .modal p { color: var(--mid); font-size: 14px; margin-bottom: 24px; }
+  .modal .actions { display: flex; gap: 12px; justify-content: center; }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 600px) {
+    .form-row, .form-row.three { grid-template-columns: 1fr; }
+    header { padding: 0 16px; }
+    .container { padding: 20px 16px 80px; }
+    .card { padding: 20px 18px; }
+  }
+
+  .page-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--charcoal);
+    margin-bottom: 6px;
+  }
+  .page-subtitle {
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 32px;
+  }
+
+  .success-toast {
+    position: fixed;
+    top: 90px; right: 24px;
+    background: var(--sage);
+    color: white;
+    padding: 14px 22px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-8px);
+    transition: all .3s;
+    z-index: 999;
+    box-shadow: 0 4px 16px rgba(107,143,113,.4);
+  }
+  .success-toast.show { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- ─── HEADER ─── -->
+<header>
+  <div class="header-brand">
+    <div class="header-logo-area" onclick="document.getElementById('logo-input').click()" title="Click to upload your logo">
+      <div class="logo-placeholder" id="header-logo-placeholder">Your<br>Logo</div>
+      <img id="header-logo-img" src="" style="display:none;" alt="Logo">
+    </div>
+    <input type="file" id="logo-input" accept="image/*" onchange="handleLogoUpload(event)">
+    <div class="brand-text">
+      <h1>NutriPlan</h1>
+      <p>Professional Meal Planning</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-outline" onclick="clearForm()">Clear Form</button>
+    <button class="btn btn-primary" onclick="downloadPDF()">⬇ Download PDF</button>
+  </div>
+</header>
+
+<!-- ─── MAIN ─── -->
+<div class="container">
+
+  <div class="page-title">Meal Plan Builder</div>
+  <div class="page-subtitle">Fill in patient details and customize their daily meal plan, then export a professional PDF.</div>
+
+  <!-- LOGO UPLOAD -->
+  <div class="card">
+    <div class="card-title"><span class="dot"></span> Your Brand Logo</div>
+    <div class="logo-upload-zone" id="logo-zone" onclick="document.getElementById('logo-input').click()">
+      <div id="logo-placeholder-inner">
+        <div class="upload-icon">🖼️</div>
+        <div class="upload-hint"><strong>Click to upload your logo</strong><br>PNG, JPG, SVG — The logo will appear on the PDF header<br>and as a watermark to protect your copyright.</div>
+      </div>
+      <div id="logo-preview-inner" style="display:none;">
+        <img id="logo-preview-img" src="" alt="Logo Preview">
+        <div style="font-size:13px;color:var(--sage);font-weight:600;">Logo uploaded ✓</div>
+        <div class="logo-remove" onclick="removeLogo(event)">Remove logo</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PATIENT INFO -->
+  <div class="card">
+    <div class="card-title"><span class="dot"></span> Patient Information</div>
+    <div class="form-row three">
+      <div class="field">
+        <label>Patient Name</label>
+        <input type="text" id="patient-name" placeholder="Full name">
+      </div>
+      <div class="field">
+        <label>Age</label>
+        <input type="number" id="patient-age" placeholder="e.g. 34" min="1" max="120">
+      </div>
+      <div class="field">
+        <label>Gender</label>
+        <select id="patient-gender">
+          <option value="">Select</option>
+          <option>Female</option>
+          <option>Male</option>
+          <option>Other / Prefer not to say</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row three">
+      <div class="field">
+        <label>Weight (kg)</label>
+        <input type="number" id="patient-weight" placeholder="e.g. 72" step="0.1">
+      </div>
+      <div class="field">
+        <label>Height (cm)</label>
+        <input type="number" id="patient-height" placeholder="e.g. 165">
+      </div>
+      <div class="field">
+        <label>Plan Date</label>
+        <input type="date" id="plan-date">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label>Goal / Objective</label>
+        <input type="text" id="patient-goal" placeholder="e.g. Weight loss, Muscle gain, Diabetes management…">
+      </div>
+      <div class="field">
+        <label>Dietary Restrictions</label>
+        <input type="text" id="patient-restrictions" placeholder="e.g. Gluten-free, Lactose intolerant, Vegan…">
+      </div>
+    </div>
+    <div class="form-row full">
+      <div class="field">
+        <label>Daily Calorie Target (kcal)</label>
+        <input type="number" id="patient-calories" placeholder="e.g. 1800" style="max-width:200px;">
+      </div>
+    </div>
+  </div>
+
+  <!-- DIETITIAN INFO -->
+  <div class="card">
+    <div class="card-title"><span class="dot"></span> Dietitian Information</div>
+    <div class="form-row three">
+      <div class="field">
+        <label>Your Name</label>
+        <input type="text" id="dietitian-name" placeholder="Dr. / Ms. / Mr. …">
+      </div>
+      <div class="field">
+        <label>Clinic / Practice Name</label>
+        <input type="text" id="clinic-name" placeholder="Nutrition & Wellness Center">
+      </div>
+      <div class="field">
+        <label>Contact / Phone</label>
+        <input type="text" id="dietitian-contact" placeholder="+20 …">
+      </div>
+    </div>
+  </div>
+
+  <!-- MEALS -->
+  <div class="card">
+    <div class="card-title"><span class="dot"></span> Daily Meals</div>
+    <div class="meal-controls">
+      <span class="meal-count-label">Meals:</span>
+      <button class="count-btn" onclick="changeCount('meal', -1)">−</button>
+      <span class="count-display" id="meal-count-display">3</span>
+      <button class="count-btn" onclick="changeCount('meal', 1)">+</button>
+      <span class="meal-count-label" style="margin-left:20px;">Snacks:</span>
+      <button class="count-btn" onclick="changeCount('snack', -1)">−</button>
+      <span class="count-display" id="snack-count-display">2</span>
+      <button class="count-btn" onclick="changeCount('snack', 1)">+</button>
+    </div>
+    <div id="meals-container"></div>
+  </div>
+
+  <!-- NOTES -->
+  <div class="card">
+    <div class="card-title"><span class="dot"></span> Additional Notes & Recommendations</div>
+    <div class="field">
+      <label>General Notes</label>
+      <textarea id="general-notes" placeholder="Hydration tips, lifestyle recommendations, supplements, follow-up date…" style="min-height:110px;"></textarea>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label>Next Follow-up Date</label>
+        <input type="date" id="followup-date">
+      </div>
+      <div class="field">
+        <label>Water Intake Target</label>
+        <input type="text" id="water-intake" placeholder="e.g. 2.5 liters per day">
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FIXED BOTTOM BAR -->
+<div class="bottom-bar">
+  <div class="bottom-bar-info" id="form-status">Fill in the form above and download your PDF when ready.</div>
+  <button class="btn btn-primary btn-lg" onclick="downloadPDF()">⬇ Download Meal Plan PDF</button>
+</div>
+
+<!-- SUCCESS TOAST -->
+<div class="success-toast" id="toast">✓ PDF downloaded successfully!</div>
+
+<script>
+// ─── STATE ───
+let logoDataUrl = null;
+let mealCount = 3;
+let snackCount = 2;
+
+// ─── LOGO ───
+function handleLogoUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    logoDataUrl = ev.target.result;
+    // update header
+    document.getElementById('header-logo-placeholder').style.display = 'none';
+    const hi = document.getElementById('header-logo-img');
+    hi.src = logoDataUrl; hi.style.display = 'block';
+    // update card
+    document.getElementById('logo-placeholder-inner').style.display = 'none';
+    document.getElementById('logo-preview-inner').style.display = 'block';
+    document.getElementById('logo-preview-img').src = logoDataUrl;
+    document.getElementById('logo-zone').classList.add('has-logo');
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeLogo(e) {
+  e.stopPropagation();
+  logoDataUrl = null;
+  document.getElementById('header-logo-placeholder').style.display = '';
+  document.getElementById('header-logo-img').style.display = 'none';
+  document.getElementById('logo-placeholder-inner').style.display = '';
+  document.getElementById('logo-preview-inner').style.display = 'none';
+  document.getElementById('logo-zone').classList.remove('has-logo');
+  document.getElementById('logo-input').value = '';
+}
+
+// ─── MEALS ───
+const MEAL_DEFAULTS = ['Breakfast','Lunch','Dinner','4th Meal','5th Meal'];
+const SNACK_DEFAULTS = ['Morning Snack','Afternoon Snack'];
+
+function changeCount(type, delta) {
+  if (type === 'meal') {
+    mealCount = Math.min(5, Math.max(1, mealCount + delta));
+    document.getElementById('meal-count-display').textContent = mealCount;
+  } else {
+    snackCount = Math.min(3, Math.max(0, snackCount + delta));
+    document.getElementById('snack-count-display').textContent = snackCount;
+  }
+  renderMeals();
+}
+
+function renderMeals() {
+  const container = document.getElementById('meals-container');
+  // preserve existing values
+  const existing = {};
+  container.querySelectorAll('.meal-item').forEach(el => {
+    const id = el.dataset.id;
+    existing[id] = {
+      name: el.querySelector('.meal-name-input')?.value || '',
+      time: el.querySelector('.meal-time')?.value || '',
+      foods: el.querySelector('.meal-foods')?.value || '',
+      calories: el.querySelector('.meal-calories')?.value || '',
+      notes: el.querySelector('.meal-notes')?.value || '',
+    };
+  });
+
+  container.innerHTML = '';
+
+  // Render meals
+  for (let i = 0; i < mealCount; i++) {
+    const id = `meal-${i}`;
+    const def = MEAL_DEFAULTS[i];
+    const v = existing[id] || {};
+    container.appendChild(createMealEl(id, 'meal', def, i + 1, v));
+  }
+
+  // Render snacks
+  for (let i = 0; i < snackCount; i++) {
+    const id = `snack-${i}`;
+    const def = SNACK_DEFAULTS[i] || `Snack ${i+1}`;
+    const v = existing[id] || {};
+    container.appendChild(createMealEl(id, 'snack', def, i + 1, v));
+  }
+}
+
+function createMealEl(id, type, defaultName, num, vals) {
+  const div = document.createElement('div');
+  div.className = `meal-item ${type}-type`;
+  div.dataset.id = id;
+  div.innerHTML = `
+    <div class="meal-header">
+      <span class="meal-badge">${type === 'meal' ? `Meal ${num}` : `Snack ${num}`}</span>
+      <input class="meal-name-input" type="text" placeholder="${defaultName}" value="${vals.name || ''}" title="Meal label">
+    </div>
+    <div class="form-row three">
+      <div class="field">
+        <label>Time</label>
+        <input class="meal-time" type="text" placeholder="e.g. 8:00 AM" value="${vals.time || ''}">
+      </div>
+      <div class="field">
+        <label>Calories (kcal)</label>
+        <input class="meal-calories" type="number" placeholder="e.g. 450" value="${vals.calories || ''}">
+      </div>
+      <div class="field">
+        <label>Portion Size</label>
+        <input class="meal-portion" type="text" placeholder="e.g. 1 plate / 250g" value="${vals.portion || ''}">
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:10px;">
+      <label>What to Eat</label>
+      <textarea class="meal-foods" placeholder="Describe the foods, ingredients, and portions in detail…">${vals.foods || ''}</textarea>
+    </div>
+    <div class="field">
+      <label>Meal Notes (optional)</label>
+      <input class="meal-notes" type="text" placeholder="e.g. Avoid frying, prefer steamed, can swap for…" value="${vals.notes || ''}">
+    </div>
+  `;
+  return div;
+}
+
+// ─── CLEAR ───
+function clearForm() {
+  if (!confirm('Clear all form data?')) return;
+  document.querySelectorAll('input[type=text], input[type=number], input[type=date], textarea, select').forEach(el => {
+    if (el.tagName === 'SELECT') el.selectedIndex = 0;
+    else el.value = '';
+  });
+  mealCount = 3; snackCount = 2;
+  document.getElementById('meal-count-display').textContent = 3;
+  document.getElementById('snack-count-display').textContent = 2;
+  renderMeals();
+}
+
+// ─── PDF DOWNLOAD ───
+function downloadPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+  const W = 210, H = 297;
+  const margin = 18;
+  let y = margin;
+
+  const sage = [107, 143, 113];
+  const sagePale = [232, 240, 233];
+  const snackCol = [212, 149, 106];
+  const charcoal = [44, 44, 44];
+  const mid = [90, 90, 90];
+  const muted = [154, 154, 154];
+  const cream = [250, 247, 242];
+
+  function addPage() {
+    doc.addPage();
+    y = margin;
+    drawPageFrame();
+  }
+
+  function drawPageFrame() {
+    // subtle background stripe at top
+    doc.setFillColor(...sagePale);
+    doc.rect(0, 0, W, 14, 'F');
+  }
+
+  function checkY(needed = 30) {
+    if (y + needed > H - 20) addPage();
+  }
+
+  function drawWatermark() {
+    if (!logoDataUrl) return;
+    doc.saveGraphicsState();
+    doc.setGState(doc.GState({ opacity: 0.07 }));
+    const cx = W / 2, cy = H / 2;
+    const size = 90;
+    try { doc.addImage(logoDataUrl, 'PNG', cx - size/2, cy - size/2, size, size); } catch(e) {}
+    doc.restoreGraphicsState();
+  }
+
+  function sectionHeader(text, color = sage) {
+    checkY(20);
+    doc.setFillColor(...color);
+    doc.roundedRect(margin, y, W - margin*2, 8, 2, 2, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(255, 255, 255);
+    doc.text(text.toUpperCase(), margin + 5, y + 5.5);
+    y += 12;
+  }
+
+  function row(label, value, split = false) {
+    if (!value) return;
+    checkY(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...mid);
+    doc.text(label + ':', margin + 2, y);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...charcoal);
+    if (split) {
+      const lines = doc.splitTextToSize(String(value), W - margin*2 - 42);
+      doc.text(lines, margin + 40, y);
+      y += lines.length * 5 + 2;
+    } else {
+      doc.text(String(value), margin + 40, y);
+      y += 7;
+    }
+  }
+
+  function multiRow(label, value) {
+    if (!value) return;
+    checkY(14);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...mid);
+    doc.text(label + ':', margin + 2, y);
+    y += 5.5;
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...charcoal);
+    const lines = doc.splitTextToSize(String(value), W - margin*2 - 4);
+    lines.forEach(line => {
+      checkY(6);
+      doc.text(line, margin + 4, y);
+      y += 5;
+    });
+    y += 2;
+  }
+
+  // ══════════════════════════════════════════════
+  // PAGE 1
+  // ══════════════════════════════════════════════
+  drawPageFrame();
+  drawWatermark();
+
+  // Header bar
+  doc.setFillColor(...sage);
+  doc.rect(0, 0, W, 42, 'F');
+
+  // Logo on header
+  if (logoDataUrl) {
+    try { doc.addImage(logoDataUrl, 'PNG', margin, 7, 24, 24); } catch(e){}
+  }
+
+  // Title
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(20);
+  doc.setTextColor(255, 255, 255);
+  doc.text('Personalized Meal Plan', logoDataUrl ? margin + 28 : margin, 22);
+
+  const dietName = v('dietitian-name');
+  const clinicName = v('clinic-name');
+  const contact = v('dietitian-contact');
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(220, 240, 222);
+  let dietLine = [dietName, clinicName, contact].filter(Boolean).join(' • ');
+  if (dietLine) doc.text(dietLine, logoDataUrl ? margin + 28 : margin, 31);
+
+  y = 50;
+
+  // Patient info box
+  doc.setFillColor(...cream);
+  doc.roundedRect(margin, y, W - margin*2, 44, 3, 3, 'F');
+  doc.setDrawColor(...sagePale);
+  doc.roundedRect(margin, y, W - margin*2, 44, 3, 3, 'S');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.setTextColor(...charcoal);
+  const pName = v('patient-name') || '—';
+  doc.text(pName, margin + 6, y + 10);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(...mid);
+  const pAge = v('patient-age') ? `Age: ${v('patient-age')}` : '';
+  const pGen = v('patient-gender') || '';
+  const pWt = v('patient-weight') ? `Weight: ${v('patient-weight')} kg` : '';
+  const pHt = v('patient-height') ? `Height: ${v('patient-height')} cm` : '';
+  const bmiStr = (v('patient-weight') && v('patient-height')) ? `BMI: ${(parseFloat(v('patient-weight')) / Math.pow(parseFloat(v('patient-height'))/100, 2)).toFixed(1)}` : '';
+
+  let infoLine1 = [pAge, pGen, pWt, pHt, bmiStr].filter(Boolean).join('   |   ');
+  if (infoLine1) doc.text(infoLine1, margin + 6, y + 18);
+
+  const pGoal = v('patient-goal') ? `Goal: ${v('patient-goal')}` : '';
+  const pCal = v('patient-calories') ? `Daily Target: ${v('patient-calories')} kcal` : '';
+  const pRes = v('patient-restrictions') ? `Restrictions: ${v('patient-restrictions')}` : '';
+  [pGoal, pCal, pRes].filter(Boolean).forEach((line, i) => {
+    doc.text(line, margin + 6, y + 26 + i * 6);
+  });
+
+  // Date top right
+  const pDate = v('plan-date') ? formatDate(v('plan-date')) : formatDate(new Date().toISOString().slice(0,10));
+  doc.setFontSize(8);
+  doc.setTextColor(...muted);
+  doc.text(`Plan Date: ${pDate}`, W - margin - 2, y + 8, { align: 'right' });
+
+  y += 52;
+
+  // Collect meals
+  const meals = [];
+  document.querySelectorAll('.meal-item').forEach(el => {
+    const type = el.classList.contains('meal-type') ? 'meal' : 'snack';
+    const labelInput = el.querySelector('.meal-name-input')?.value;
+    const badge = el.querySelector('.meal-badge')?.textContent || '';
+    meals.push({
+      type,
+      label: labelInput || badge,
+      badge,
+      time: el.querySelector('.meal-time')?.value || '',
+      foods: el.querySelector('.meal-foods')?.value || '',
+      calories: el.querySelector('.meal-calories')?.value || '',
+      portion: el.querySelector('.meal-portion')?.value || '',
+      notes: el.querySelector('.meal-notes')?.value || '',
+    });
+  });
+
+  // ── Render each meal ──
+  meals.forEach((m, idx) => {
+    const isMeal = m.type === 'meal';
+    const color = isMeal ? sage : snackCol;
+    const bgColor = isMeal ? [244, 248, 244] : [253, 246, 238];
+
+    checkY(40);
+
+    // Meal card background
+    const cardH = estimateMealH(m);
+    doc.setFillColor(...bgColor);
+    doc.roundedRect(margin, y, W - margin*2, cardH, 3, 3, 'F');
+
+    // Meal color strip on left
+    doc.setFillColor(...color);
+    doc.roundedRect(margin, y, 5, cardH, 2, 2, 'F');
+
+    // Badge pill
+    doc.setFillColor(...color);
+    doc.roundedRect(margin + 9, y + 4, 28, 6, 3, 3, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(255, 255, 255);
+    doc.text(m.badge.toUpperCase(), margin + 23, y + 8.2, { align: 'center' });
+
+    // Meal name
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10.5);
+    doc.setTextColor(...charcoal);
+    doc.text(m.label || m.badge, margin + 42, y + 8.5);
+
+    // Time
+    if (m.time) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.setTextColor(...muted);
+      doc.text(`🕐 ${m.time}`, W - margin - 2, y + 8.5, { align: 'right' });
+    }
+
+    let cardY = y + 16;
+
+    // What to eat
+    if (m.foods) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7.5);
+      doc.setTextColor(...mid);
+      doc.text('WHAT TO EAT:', margin + 9, cardY);
+      cardY += 5;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.setTextColor(...charcoal);
+      const foodLines = doc.splitTextToSize(m.foods, W - margin*2 - 18);
+      foodLines.forEach(line => {
+        doc.text(line, margin + 9, cardY);
+        cardY += 5;
+      });
+    }
+
+    // Row: calories + portion
+    const extras = [];
+    if (m.calories) extras.push(`Calories: ${m.calories} kcal`);
+    if (m.portion) extras.push(`Portion: ${m.portion}`);
+    if (extras.length) {
+      cardY += 2;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(...muted);
+      doc.text(extras.join('   |   '), margin + 9, cardY);
+      cardY += 5;
+    }
+
+    // Notes
+    if (m.notes) {
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(8);
+      doc.setTextColor(...mid);
+      const noteLines = doc.splitTextToSize(`Note: ${m.notes}`, W - margin*2 - 18);
+      noteLines.forEach(line => {
+        doc.text(line, margin + 9, cardY);
+        cardY += 5;
+      });
+    }
+
+    y += cardH + 5;
+  });
+
+  // ── Notes section ──
+  const notes = v('general-notes');
+  const followup = v('followup-date');
+  const water = v('water-intake');
+
+  if (notes || followup || water) {
+    checkY(30);
+    sectionHeader('Additional Recommendations');
+    if (notes) multiRow('General Notes', notes);
+    if (water) row('Water Intake', water);
+    if (followup) row('Next Follow-up', formatDate(followup));
+    y += 4;
+  }
+
+  // ── Footer on each page ──
+  const pageCount = doc.internal.getNumberOfPages();
+  for (let p = 1; p <= pageCount; p++) {
+    doc.setPage(p);
+    drawWatermark();
+    doc.setFillColor(...sagePale);
+    doc.rect(0, H - 14, W, 14, 'F');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(...muted);
+    const footLeft = [v('dietitian-name'), v('clinic-name'), v('dietitian-contact')].filter(Boolean).join(' • ');
+    if (footLeft) doc.text(footLeft, margin, H - 6);
+    doc.text(`Page ${p} of ${pageCount}`, W - margin, H - 6, { align: 'right' });
+    doc.setTextColor(...sage);
+    doc.text('Confidential – For Patient Use Only', W / 2, H - 6, { align: 'center' });
+  }
+
+  // Save
+  const fname = `MealPlan_${(v('patient-name') || 'Patient').replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.pdf`;
+  doc.save(fname);
+  showToast();
+}
+
+function estimateMealH(m) {
+  let h = 20;
+  if (m.foods) {
+    const lines = Math.ceil(m.foods.length / 70) + 1;
+    h += lines * 5 + 6;
+  }
+  if (m.calories || m.portion) h += 7;
+  if (m.notes) {
+    const nlines = Math.ceil(m.notes.length / 80) + 1;
+    h += nlines * 5 + 2;
+  }
+  return Math.max(h, 28);
+}
+
+function v(id) { return (document.getElementById(id)?.value || '').trim(); }
+
+function formatDate(str) {
+  if (!str) return '';
+  const d = new Date(str + 'T00:00:00');
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+}
+
+function showToast() {
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ─── INIT ───
+document.getElementById('plan-date').value = new Date().toISOString().slice(0,10);
+renderMeals();
+</script>
+</body>
+</html>
