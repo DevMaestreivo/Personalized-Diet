@@ -17,66 +17,78 @@
             --text:#1A1A1A;--text-muted:#6B7280;--border:#E2DDD5;--danger:#C0392B;
         }
         *{box-sizing:border-box;margin:0;padding:0}
-        body{font-family:'DM Sans','Cairo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+        /* FIX: Cairo font prioritized to ensure Arabic characters render correctly */
+        body{font-family:'Cairo','DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+        
         body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 10% 20%,rgba(14,107,62,.06) 0%,transparent 50%),radial-gradient(ellipse at 90% 80%,rgba(212,168,67,.06) 0%,transparent 50%),url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%230E6B3E' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");pointer-events:none;z-index:0}
         .main-container{position:relative;z-index:1}
         ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--primary);border-radius:3px}
-        .form-input{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans','Cairo',sans-serif;font-size:14px;background:#FAFAF8;transition:all .25s;color:var(--text)}
+        
+        .form-input{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'Cairo','DM Sans',sans-serif;font-size:14px;background:#FAFAF8;transition:all .25s;color:var(--text)}
         .form-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(14,107,62,.1);background:#fff}
         .form-input::placeholder{color:#B0ADA6}
         .form-label{display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
         select.form-input{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
         textarea.form-input{resize:vertical;min-height:60px}
+        
         .section-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.04);transition:box-shadow .3s}
         .section-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.06)}
         .section-title{font-family:'Cairo',sans-serif;font-weight:700;font-size:18px;color:var(--primary-dark);margin-bottom:20px;display:flex;align-items:center;gap:10px}
         .section-title i{width:32px;height:32px;background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px}
+        
         .meal-row{display:grid;grid-template-columns:120px 1fr 80px 80px;gap:10px;align-items:end;margin-bottom:12px;padding:14px;background:#FAFAF8;border-radius:12px;border:1px solid transparent;transition:all .2s}
         .meal-row:hover{border-color:var(--border);background:#fff}
+        
         .btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;border:none;padding:12px 24px;border-radius:12px;font-family:'Cairo',sans-serif;font-weight:700;font-size:15px;cursor:pointer;transition:all .3s;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 14px rgba(14,107,62,.3)}
         .btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(14,107,62,.4)}
         .btn-accent{background:linear-gradient(135deg,var(--accent),var(--accent-light));color:#1A1A1A;border:none;padding:10px 20px;border-radius:10px;font-family:'Cairo',sans-serif;font-weight:600;font-size:13px;cursor:pointer;transition:all .3s;display:inline-flex;align-items:center;gap:6px}
         .btn-accent:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(212,168,67,.4)}
         .btn-outline{background:transparent;color:var(--primary);border:1.5px solid var(--primary);padding:8px 16px;border-radius:10px;font-family:'DM Sans',sans-serif;font-weight:600;font-size:13px;cursor:pointer;transition:all .25s;display:inline-flex;align-items:center;gap:6px}
         .btn-outline:hover{background:var(--primary);color:#fff}
+        
         .day-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px}
         .day-tab{padding:8px 18px;border-radius:10px;font-family:'Cairo',sans-serif;font-weight:600;font-size:13px;cursor:pointer;border:1.5px solid var(--border);background:#FAFAF8;color:var(--text-muted);transition:all .25s}
         .day-tab:hover{border-color:var(--primary);color:var(--primary)}
         .day-tab.active{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;border-color:var(--primary);box-shadow:0 2px 8px rgba(14,107,62,.3)}
         .day-panel{display:none}.day-panel.active{display:block}
+        
         .toast{position:fixed;bottom:30px;right:30px;padding:14px 24px;border-radius:12px;font-weight:600;font-size:14px;color:#fff;z-index:9999;transform:translateY(100px);opacity:0;transition:all .4s cubic-bezier(.34,1.56,.64,1);display:flex;align-items:center;gap:10px}
         .toast.show{transform:translateY(0);opacity:1}
         .toast.success{background:linear-gradient(135deg,#27AE60,#2ECC71)}.toast.error{background:linear-gradient(135deg,#C0392B,#E74C3C)}.toast.info{background:linear-gradient(135deg,var(--primary),var(--primary-light))}
+        
         .top-bar{background:linear-gradient(135deg,var(--primary-dark),var(--primary),var(--primary-light));padding:16px 0;color:#fff;position:sticky;top:0;z-index:100;box-shadow:0 4px 20px rgba(14,107,62,.25)}
+        
         @keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
         .animate-in{animation:fadeInUp .5s ease forwards}
+        
         .loading-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
         .loading-overlay.show{display:flex}
         .loading-spinner{width:50px;height:50px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
         @keyframes spin{to{transform:rotate(360deg)}}
+        
         .logo-upload-zone{border:2px dashed var(--border);border-radius:14px;padding:24px;text-align:center;cursor:pointer;transition:all .3s;position:relative;overflow:hidden}
         .logo-upload-zone:hover{border-color:var(--primary);background:rgba(14,107,62,.03)}
-.logo-upload-zone.has-logo{
-    border-style:solid;
-    border-color:var(--primary);
-    padding:12px;
-    background:
-        linear-gradient(45deg,#f3f3f3 25%,transparent 25%),
-        linear-gradient(-45deg,#f3f3f3 25%,transparent 25%),
-        linear-gradient(45deg,transparent 75%,#f3f3f3 75%),
-        linear-gradient(-45deg,transparent 75%,#f3f3f3 75%);
-    background-size:20px 20px;
-    background-position:0 0,0 10px,10px -10px,-10px 0px;
-}
- .logo-preview-img{
-    max-height:80px;
-    max-width:200px;
-    object-fit:contain;
-    border-radius:8px;
-    padding:8px;
-    background:white;
-    box-shadow:0 2px 10px rgba(0,0,0,.08);
-}
+        .logo-upload-zone.has-logo{
+            border-style:solid;
+            border-color:var(--primary);
+            padding:12px;
+            background:
+                linear-gradient(45deg,#f3f3f3 25%,transparent 25%),
+                linear-gradient(-45deg,#f3f3f3 25%,transparent 25%),
+                linear-gradient(45deg,transparent 75%,#f3f3f3 75%),
+                linear-gradient(-45deg,transparent 75%,#f3f3f3 75%);
+            background-size:20px 20px;
+            background-position:0 0,0 10px,10px -10px,-10px 0px;
+        }
+        .logo-preview-img{
+            max-height:80px;
+            max-width:200px;
+            object-fit:contain;
+            border-radius:8px;
+            padding:8px;
+            background:white;
+            box-shadow:0 2px 10px rgba(0,0,0,.08);
+        }
         @media(max-width:768px){.meal-row{grid-template-columns:1fr 1fr}.section-card{padding:18px}}
     </style>
 </head>
@@ -144,9 +156,9 @@
         <div class="section-card animate-in" style="animation-delay:.05s">
             <div class="section-title"><i class="fa-solid fa-user-doctor"></i> Dietitian Info — بيانات أخصائي التغذية</div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div><label class="form-label">الاسم / Name</label><input type="text" class="form-input" id="drName" placeholder="د/ أحمد محمد"></div>
-                <div><label class="form-label">التخصص / Specialty</label><input type="text" class="form-input" id="drSpecialty" placeholder="تغذية علاجية"></div>
-                <div><label class="form-label">الرقم / Phone</label><input type="text" class="form-input" id="drPhone" placeholder="01012345678"></div>
+                <div><label class="form-label">الاسم / Name</label><input type="text" class="form-input" dir="auto" id="drName" placeholder="د/ أحمد محمد"></div>
+                <div><label class="form-label">التخصص / Specialty</label><input type="text" class="form-input" dir="auto" id="drSpecialty" placeholder="تغذية علاجية"></div>
+                <div><label class="form-label">الرقم / Phone</label><input type="text" class="form-input" dir="auto" id="drPhone" placeholder="01012345678"></div>
             </div>
         </div>
 
@@ -154,18 +166,18 @@
         <div class="section-card animate-in" style="animation-delay:.1s">
             <div class="section-title"><i class="fa-solid fa-id-card"></i> Client Info — بيانات العميل</div>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div><label class="form-label">اسم العميل / Name</label><input type="text" class="form-input" id="clientName" placeholder="محمد علي"></div>
+                <div><label class="form-label">اسم العميل / Name</label><input type="text" class="form-input" dir="auto" id="clientName" placeholder="محمد علي"></div>
                 <div><label class="form-label">العمر / Age</label><input type="number" class="form-input" id="clientAge" placeholder="30" min="1" max="120"></div>
                 <div><label class="form-label">الجنس / Gender</label><select class="form-input" id="clientGender"><option value="">اختر</option><option value="Male">ذكر Male</option><option value="Female">أنثى Female</option></select></div>
-                <div><label class="form-label">المهنة / Occupation</label><input type="text" class="form-input" id="clientOccupation" placeholder="موظف"></div>
+                <div><label class="form-label">المهنة / Occupation</label><input type="text" class="form-input" dir="auto" id="clientOccupation" placeholder="موظف"></div>
                 <div><label class="form-label">الطول / Height cm</label><input type="number" class="form-input" id="clientHeight" placeholder="170" min="50" max="250"></div>
                 <div><label class="form-label">الوزن / Weight kg</label><input type="number" class="form-input" id="clientWeight" placeholder="85" min="20" max="300" step="0.1"></div>
                 <div><label class="form-label">المستهدف / Target kg</label><input type="number" class="form-input" id="targetWeight" placeholder="70" min="20" max="300" step="0.1"></div>
                 <div><label class="form-label">التاريخ / Date</label><input type="date" class="form-input" id="visitDate"></div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <div><label class="form-label">الأمراض / Medical</label><textarea class="form-input" id="medicalConditions" rows="2" placeholder="سكري، ضغط، تكيس..."></textarea></div>
-                <div><label class="form-label">الحساسية / Allergies</label><textarea class="form-input" id="foodAllergies" rows="2" placeholder="لاكتوز، جلوتين..."></textarea></div>
+                <div><label class="form-label">الأمراض / Medical</label><textarea class="form-input" dir="auto" id="medicalConditions" rows="2" placeholder="سكري، ضغط، تكيس..."></textarea></div>
+                <div><label class="form-label">الحساسية / Allergies</label><textarea class="form-input" dir="auto" id="foodAllergies" rows="2" placeholder="لاكتوز، جلوتين..."></textarea></div>
             </div>
         </div>
 
@@ -262,12 +274,12 @@
         <div class="section-card animate-in" style="animation-delay:.25s">
             <div class="section-title"><i class="fa-solid fa-clipboard-list"></i> Notes — ملاحظات</div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div><label class="form-label">إرشادات / Instructions</label><textarea class="form-input" id="generalNotes" rows="3" placeholder="تناول الطعام ببطء..."></textarea></div>
-                <div><label class="form-label">سناك / Snacks</label><textarea class="form-input" id="snackOptions" rows="3" placeholder="مكسرات، زبادي..."></textarea></div>
+                <div><label class="form-label">إرشادات / Instructions</label><textarea class="form-input" dir="auto" id="generalNotes" rows="3" placeholder="تناول الطعام ببطء..."></textarea></div>
+                <div><label class="form-label">سناك / Snacks</label><textarea class="form-input" dir="auto" id="snackOptions" rows="3" placeholder="مكسرات، زبادي..."></textarea></div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <div><label class="form-label">مشروبات / Beverages</label><textarea class="form-input" id="beverages" rows="2" placeholder="ماء، شاي أخضر..."></textarea></div>
-                <div><label class="form-label">ممنوعات / Avoid</label><textarea class="form-input" id="avoidFoods" rows="2" placeholder="سكر، مقلي..."></textarea></div>
+                <div><label class="form-label">مشروبات / Beverages</label><textarea class="form-input" dir="auto" id="beverages" rows="2" placeholder="ماء، شاي أخضر..."></textarea></div>
+                <div><label class="form-label">ممنوعات / Avoid</label><textarea class="form-input" dir="auto" id="avoidFoods" rows="2" placeholder="سكر، مقلي..."></textarea></div>
             </div>
             <div class="mt-4"><label class="form-label">متابعة / Follow-up</label><input type="date" class="form-input" id="followUpDate" style="max-width:250px"></div>
         </div>
@@ -339,10 +351,11 @@
                 if(i>0){const cb=document.createElement('button');cb.className='btn-outline mb-3';cb.innerHTML='<i class="fa-solid fa-copy"></i> نسخ من اليوم الأول';cb.onclick=()=>copyFromDay1(d.key);panel.appendChild(cb);}
                 MEALS.forEach(m=>{
                     const row=document.createElement('div');row.className='meal-row';
+                    // FIX: Added dir="auto" to textareas and inputs for mixed Arabic/English support
                     row.innerHTML=`<div><label class="form-label">${m.ar}</label><div class="font-semibold text-sm text-[var(--primary)]">${m.label}</div></div>
-                    <div><label class="form-label">الأكل / Food</label><textarea class="form-input" rows="2" id="${d.key}-${m.key}-food" placeholder="2 بيض مسلوق، توست..."></textarea></div>
-                    <div><label class="form-label">Cal</label><input type="number" class="form-input" id="${d.key}-${m.key}-cal" placeholder="0" min="0"></div>
-                    <div><label class="form-label">الكمية</label><input type="text" class="form-input" id="${d.key}-${m.key}-qty" placeholder="—"></div>`;
+                    <div><label class="form-label">الأكل / Food</label><textarea class="form-input" dir="auto" rows="2" id="${d.key}-${m.key}-food" placeholder="2 بيض مسلوق، توست..."></textarea></div>
+                    <div><label class="form-label">Cal</label><input type="number" class="form-input" dir="auto" id="${d.key}-${m.key}-cal" placeholder="0" min="0"></div>
+                    <div><label class="form-label">الكمية</label><input type="text" class="form-input" dir="auto" id="${d.key}-${m.key}-qty" placeholder="—"></div>`;
                     panel.appendChild(row);
                 });
                 const td=document.createElement('div');td.className='flex justify-end items-center gap-3 mt-2 pr-2';
@@ -532,8 +545,9 @@ transform:rotate(-15deg);" crossorigin="anonymous">`;
                 MEALS.forEach(m=>{
                     const food=n(`${day.key}-${m.key}-food`);const cal=parseInt(v(`${day.key}-${m.key}-cal`))||0;const qty=v(`${day.key}-${m.key}-qty`);
                     if(!food&&!cal)return;dtot+=cal;
+                    // FIX: Added dir="auto" to the Food cell in PDF to handle Arabic correctly
                     h+=`<tr><td style="padding:5px 8px;border-bottom:1px solid #EEE;font-weight:700;color:#0E6B3E;vertical-align:top;white-space:nowrap;">${m.label}<br><span style="font-size:8pt;color:#6B7280;font-weight:400;">${m.ar}</span></td>
-                        <td style="padding:5px 8px;border-bottom:1px solid #EEE;vertical-align:top;">${food.replace(/\n/g,'<br>')}</td>
+                        <td style="padding:5px 8px;border-bottom:1px solid #EEE;vertical-align:top;direction: auto;">${food.replace(/\n/g,'<br>')}</td>
                         <td style="padding:5px 8px;border-bottom:1px solid #EEE;font-weight:700;text-align:center;">${cal||'—'}</td>
                         <td style="padding:5px 8px;border-bottom:1px solid #EEE;text-align:center;">${qty}</td></tr>`;
                 });
