@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diet Sheet Pro — Egyptian Dietitian Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary:#0E6B3E;--primary-light:#128A50;--primary-dark:#094D2C;
+            --accent:#D4A843;--accent-light:#F0CC6B;--bg:#F5F1EB;--bg-card:#FFF;
+            --text:#1A1A1A;--text-muted:#6B7280;--border:#E2DDD5;--danger:#C0392B;
+        }
+        *{box-sizing:border-box;margin:0;padding:0}
+        /* FIX: Cairo font prioritized to ensure Arabic characters render correctly */
+        body{font-family:'Cairo','DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+        
+        body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 10% 20%,rgba(14,107,62,.06) 0%,transparent 50%),radial-gradient(ellipse at 90% 80%,rgba(212,168,67,.06) 0%,transparent 50%),url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%230E6B3E' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");pointer-events:none;z-index:0}
+        .main-container{position:relative;z-index:1}
+        ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--primary);border-radius:3px}
+        
+        .form-input{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'Cairo','DM Sans',sans-serif;font-size:14px;background:#FAFAF8;transition:all .25s;color:var(--text)}
+        .form-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(14,107,62,.1);background:#fff}
+        .form-input::placeholder{color:#B0ADA6}
+        .form-label{display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+        select.form-input{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
+        textarea.form-input{resize:vertical;min-height:60px}
+        
+        .section-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.04);transition:box-shadow .3s}
+        .section-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.06)}
+        .section-title{font-family:'Cairo',sans-serif;font-weight:700;font-size:18px;color:var(--primary-dark);margin-bottom:20px;display:flex;align-items:center;gap:10px}
+        .section-title i{width:32px;height:32px;background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px}
+        
+        .meal-row{display:grid;grid-template-columns:120px 1fr 80px;gap:10px;align-items:end;margin-bottom:12px;padding:14px;background:#FAFAF8;border-radius:12px;border:1px solid transparent;transition:all .2s}
+        .meal-row:hover{border-color:var(--border);background:#fff}
+        
+        .btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;border:none;padding:12px 24px;border-radius:12px;font-family:'Cairo',sans-serif;font-weight:700;font-size:15px;cursor:pointer;transition:all .3s;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 14px rgba(14,107,62,.3)}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(14,107,62,.4)}
+        .btn-accent{background:linear-gradient(135deg,var(--accent),var(--accent-light));color:#1A1A1A;border:none;padding:10px 20px;border-radius:10px;font-family:'Cairo',sans-serif;font-weight:600;font-size:13px;cursor:pointer;transition:all .3s;display:inline-flex;align-items:center;gap:6px}
+        .btn-accent:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(212,168,67,.4)}
+        .btn-outline{background:transparent;color:var(--primary);border:1.5px solid var(--primary);padding:8px 16px;border-radius:10px;font-family:'DM Sans',sans-serif;font-weight:600;font-size:13px;cursor:pointer;transition:all .25s;display:inline-flex;align-items:center;gap:6px}
+        .btn-outline:hover{background:var(--primary);color:#fff}
+        
+        .day-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+        .day-tab{padding:8px 18px;border-radius:10px;font-family:'Cairo',sans-serif;font-weight:600;font-size:13px;cursor:pointer;border:1.5px solid var(--border);background:#FAFAF8;color:var(--text-muted);transition:all .25s}
+        .day-tab:hover{border-color:var(--primary);color:var(--primary)}
+        .day-tab.active{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;border-color:var(--primary);box-shadow:0 2px 8px rgba(14,107,62,.3)}
+        .day-panel{display:none}.day-panel.active{display:block}
+        
+        .toast{position:fixed;bottom:30px;right:30px;padding:14px 24px;border-radius:12px;font-weight:600;font-size:14px;color:#fff;z-index:9999;transform:translateY(100px);opacity:0;transition:all .4s cubic-bezier(.34,1.56,.64,1);display:flex;align-items:center;gap:10px}
+        .toast.show{transform:translateY(0);opacity:1}
+        .toast.success{background:linear-gradient(135deg,#27AE60,#2ECC71)}.toast.error{background:linear-gradient(135deg,#C0392B,#E74C3C)}.toast.info{background:linear-gradient(135deg,var(--primary),var(--primary-light))}
+        
+        .top-bar{background:linear-gradient(135deg,var(--primary-dark),var(--primary),var(--primary-light));padding:16px 0;color:#fff;position:sticky;top:0;z-index:100;box-shadow:0 4px 20px rgba(14,107,62,.25)}
+        
+        @keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        .animate-in{animation:fadeInUp .5s ease forwards}
+        
+        .loading-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+        .loading-overlay.show{display:flex}
+        .loading-spinner{width:50px;height:50px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        
+        .logo-upload-zone{border:2px dashed var(--border);border-radius:14px;padding:24px;text-align:center;cursor:pointer;transition:all .3s;position:relative;overflow:hidden}
+        .logo-upload-zone:hover{border-color:var(--primary);background:rgba(14,107,62,.03)}
+        .logo-upload-zone.has-logo{
+            border-style:solid;
+            border-color:var(--primary);
+            padding:12px;
+            background:
+                linear-gradient(45deg,#f3f3f3 25%,transparent 25%),
+                linear-gradient(-45deg,#f3f3f3 25%,transparent 25%),
+                linear-gradient(45deg,transparent 75%,#f3f3f3 75%),
+                linear-gradient(-45deg,transparent 75%,#f3f3f3 75%);
+            background-size:20px 20px;
+            background-position:0 0,0 10px,10px -10px,-10px 0px;
+        }
+        .logo-preview-img{
+            max-height:80px;
+            max-width:200px;
+            object-fit:contain;
+            border-radius:8px;
+            padding:8px;
+            background:white;
+            box-shadow:0 2px 10px rgba(0,0,0,.08);
+        }
+        @media(max-width:768px){.meal-row{grid-template-columns:1fr 1fr}.section-card{padding:18px}}
+    </style>
+</head>
+<body>
+    <header class="top-bar">
+        <div class="max-w-5xl mx-auto px-4 flex items-center justify-between flex-wrap gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center"><i class="fa-solid fa-leaf text-lg"></i></div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight" style="font-family:'Cairo',sans-serif">Diet Sheet Pro</h1>
+                    <p class="text-xs text-white/70">Egyptian Dietitian Tool</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+                <button onclick="resetForm()" class="bg-white/15 hover:bg-white/25 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-all flex items-center gap-2"><i class="fa-solid fa-rotate-right"></i> Reset</button>
+                <button onclick="generatePDF(false)" class="bg-white text-[var(--primary-dark)] text-sm font-bold px-4 py-2 rounded-lg transition-all hover:shadow-lg flex items-center gap-2" style="font-family:'Cairo',sans-serif"><i class="fa-solid fa-eye"></i> Preview</button>
+                <button onclick="generatePDF(true)" class="bg-[var(--accent)] text-[var(--primary-dark)] text-sm font-bold px-4 py-2 rounded-lg transition-all hover:shadow-lg flex items-center gap-2" style="font-family:'Cairo',sans-serif"><i class="fa-solid fa-file-pdf"></i> Download PDF</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container max-w-5xl mx-auto px-4 py-8" id="form-section">
+        <!-- Branding & Watermark -->
+        <div class="section-card animate-in" style="animation-delay:.02s;border-left:4px solid var(--accent)">
+            <div class="section-title"><i class="fa-solid fa-stamp"></i> Branding & Watermark — العلامة التجارية</div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="form-label">شعارك / Your Logo</label>
+                    <div class="logo-upload-zone" id="logoZone" onclick="document.getElementById('logoInput').click()">
+                        <div id="logoPlaceholder">
+                            <i class="fa-solid fa-cloud-arrow-up text-2xl text-[var(--text-muted)] mb-2"></i>
+                            <p class="text-sm text-[var(--text-muted)]">Click to upload logo</p>
+                            <p class="text-xs text-[var(--border)]">PNG, JPG, SVG</p>
+                        </div>
+                        <img id="logoPreview" class="logo-preview-img" style="display:none">
+                        <input type="file" id="logoInput" accept="image/*" style="display:none" onchange="handleLogoUpload(event)">
+                    </div>
+                    <button id="removeLogoBtn" onclick="removeLogo(event)" style="display:none;margin-top:6px;background:none;border:none;color:var(--danger);cursor:pointer;font-size:12px;font-weight:600;">
+                        <i class="fa-solid fa-trash"></i> Remove Logo
+                    </button>
+                </div>
+                <div>
+                    <label class="form-label">Watermark Text (English)</label>
+                    <input type="text" class="form-input" id="watermarkEN" placeholder="Your Health, My Priority" value="Your Health, My Priority">
+                </div>
+                <div>
+                    <label class="form-label">Logo Size in PDF</label>
+                    <select class="form-input" id="logoSize">
+                        <option value="60">Small — صغير</option>
+                        <option value="90" selected>Medium — متوسط</option>
+                        <option value="130">Large — كبير</option>
+                    </select>
+                    <label class="form-label" style="margin-top:10px">Logo Opacity / الشفافية</label>
+                    <select class="form-input" id="logoOpacity">
+                        <option value="0.06">Very Light — خفيف جداً</option>
+                        <option value="0.1" selected>Light — خفيف</option>
+                        <option value="0.18">Medium — متوسط</option>
+                        <option value="0.3">Visible — واضح</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dietitian Info -->
+        <div class="section-card animate-in" style="animation-delay:.05s">
+            <div class="section-title"><i class="fa-solid fa-user-doctor"></i> Dietitian Info — بيانات أخصائي التغذية</div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div><label class="form-label">الاسم / Name</label><input type="text" class="form-input" dir="auto" id="drName" placeholder="د/ أحمد محمد"></div>
+                <div><label class="form-label">التخصص / Specialty</label><input type="text" class="form-input" dir="auto" id="drSpecialty" placeholder="تغذية علاجية"></div>
+                <div><label class="form-label">الرقم / Phone</label><input type="text" class="form-input" dir="auto" id="drPhone" placeholder="01012345678"></div>
+            </div>
+        </div>
+
+        <!-- Client Info -->
+        <div class="section-card animate-in" style="animation-delay:.1s">
+            <div class="section-title"><i class="fa-solid fa-id-card"></i> Client Info — بيانات العميل</div>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div><label class="form-label">اسم العميل / Name</label><input type="text" class="form-input" dir="auto" id="clientName" placeholder="محمد علي"></div>
+                <div><label class="form-label">العمر / Age</label><input type="number" class="form-input" id="clientAge" placeholder="30" min="1" max="120"></div>
+                <div><label class="form-label">الجنس / Gender</label><select class="form-input" id="clientGender"><option value="">اختر</option><option value="Male">ذكر Male</option><option value="Female">أنثى Female</option></select></div>
+                <div><label class="form-label">الطول / Height cm</label><input type="number" class="form-input" id="clientHeight" placeholder="170" min="50" max="250"></div>
+                <div><label class="form-label">الوزن / Weight kg</label><input type="number" class="form-input" id="clientWeight" placeholder="85" min="20" max="300" step="0.1"></div>
+                <div><label class="form-label">المستهدف / Target kg</label><input type="number" class="form-input" id="targetWeight" placeholder="70" min="20" max="300" step="0.1"></div>
+                <div><label class="form-label">التاريخ / Date</label><input type="date" class="form-input" id="visitDate"></div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div><label class="form-label">الأمراض / Medical</label><textarea class="form-input" dir="auto" id="medicalConditions" rows="2" placeholder="سكري، ضغط، تكيس..."></textarea></div>
+                <div><label class="form-label">الحساسية / Allergies</label><textarea class="form-input" dir="auto" id="foodAllergies" rows="2" placeholder="لاكتوز، جلوتين..."></textarea></div>
+            </div>
+        </div>
+
+        <!-- Calculations — Egyptian Module -->
+
+        <!-- Diet Plan -->
+        <div class="section-card animate-in" style="animation-delay:.2s">
+            <div class="section-title"><i class="fa-solid fa-utensils"></i> Diet Plan — الخطة الغذائية</div>
+            <div class="day-tabs" id="dayTabs"></div>
+            <div id="dayPanels"></div>
+        </div>
+
+        <!-- Notes -->
+        <div class="section-card animate-in" style="animation-delay:.25s">
+            <div class="section-title"><i class="fa-solid fa-clipboard-list"></i> Notes — ملاحظات</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div><label class="form-label">إرشادات / Instructions</label><textarea class="form-input" dir="auto" id="generalNotes" rows="3" placeholder="تناول الطعام ببطء..."></textarea></div>
+                <div><label class="form-label">سناك / Snacks</label><textarea class="form-input" dir="auto" id="snackOptions" rows="3" placeholder="مكسرات، زبادي..."></textarea></div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div><label class="form-label">مشروبات / Beverages</label><textarea class="form-input" dir="auto" id="beverages" rows="2" placeholder="ماء، شاي أخضر..."></textarea></div>
+                <div><label class="form-label">ممنوعات / Avoid</label><textarea class="form-input" dir="auto" id="avoidFoods" rows="2" placeholder="سكر، مقلي..."></textarea></div>
+            </div>
+            <div class="mt-4"><label class="form-label">متابعة / Follow-up</label><input type="date" class="form-input" id="followUpDate" style="max-width:250px"></div>
+        </div>
+
+        <div class="flex flex-wrap gap-4 justify-center mt-6 mb-12 animate-in" style="animation-delay:.3s">
+            <button onclick="generatePDF(false)" class="btn-outline text-base px-8 py-3"><i class="fa-solid fa-eye"></i> Preview Sheet</button>
+            <button onclick="generatePDF(true)" class="btn-primary text-base px-10 py-3" style="font-size:16px"><i class="fa-solid fa-download"></i> Download PDF</button>
+        </div>
+    </main>
+
+    <div id="render-area" style="position:fixed;left:-9999px;top:0;z-index:-1;"></div>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="text-center">
+            <div class="loading-spinner mx-auto mb-4"></div>
+            <p class="text-white font-bold text-lg" style="font-family:'Cairo',sans-serif">جاري إنشاء الملف...</p>
+            <p class="text-white/70 text-sm mt-1">Generating PDF...</p>
+        </div>
+    </div>
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const DAYS=[
+            {key:'day1',label:'',ar:'اليوم الأول'}
+        ];
+        const MEALS=[
+            {key:'breakfast',label:'Breakfast',ar:'الفطار'},{key:'snack1',label:'Snack 1',ar:'سناك 1'},
+            {key:'lunch',label:'Lunch',ar:'الغداء'},{key:'snack2',label:'Snack 2',ar:'سناك 2'},
+            {key:'dinner',label:'Dinner',ar:'العشاء'}
+        ];
+
+        let uploadedLogoDataURL = null;
+
+        function handleLogoUpload(e){
+            e.stopPropagation();
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = function(ev){
+                uploadedLogoDataURL = ev.target.result;
+                document.getElementById('logoPreview').src = uploadedLogoDataURL;
+                document.getElementById('logoPreview').style.display = 'block';
+                document.getElementById('logoPlaceholder').style.display = 'none';
+                document.getElementById('logoZone').classList.add('has-logo');
+                document.getElementById('removeLogoBtn').style.display = 'inline-block';
+                showToast('تم رفع الشعار — Logo uploaded!','success');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeLogo(e){
+            e.stopPropagation();
+            uploadedLogoDataURL = null;
+            document.getElementById('logoPreview').style.display = 'none';
+            document.getElementById('logoPlaceholder').style.display = 'block';
+            document.getElementById('logoZone').classList.remove('has-logo');
+            document.getElementById('removeLogoBtn').style.display = 'none';
+            document.getElementById('logoInput').value = '';
+            showToast('تم حذف الشعار — Logo removed','info');
+        }
+
+        function initDayTabs(){
+            const tc=document.getElementById('dayTabs'),pc=document.getElementById('dayPanels');
+            DAYS.forEach((d,i)=>{
+                const tab=document.createElement('button');
+                tab.className='day-tab'+(i===0?' active':'');
+                // tab.textContent=d.label;tab.onclick=()=>switchDay(d.key,tab);tc.appendChild(tab);
+                const panel=document.createElement('div');
+                panel.className='day-panel'+(i===0?' active':'');panel.id='panel-'+d.key;
+                if(i>0){const cb=document.createElement('button');cb.className='btn-outline mb-3';cb.innerHTML='<i class="fa-solid fa-copy"></i> نسخ من اليوم الأول';cb.onclick=()=>copyFromDay1(d.key);panel.appendChild(cb);}
+                MEALS.forEach(m=>{
+                    const row=document.createElement('div');row.className='meal-row';
+                    // FIX: Added dir="auto" to textareas and inputs for mixed Arabic/English support
+                    row.innerHTML=`<div><label class="form-label">${m.ar}</label><div class="font-semibold text-sm text-[var(--primary)]">${m.label}</div></div>
+                    <div><label class="form-label">الأكل / Food</label><textarea class="form-input" dir="auto" rows="2" id="${d.key}-${m.key}-food" placeholder="2 بيض مسلوق، توست..."></textarea></div>`;
+                    panel.appendChild(row);
+                });
+                // Add Meal button
+                const addBtn=document.createElement('button');
+                addBtn.className='btn-accent mt-2 mb-2';
+                addBtn.innerHTML='<i class="fa-solid fa-plus"></i> إضافة وجبة / Add Meal';
+                addBtn.onclick=()=>addExtraMeal(d.key,panel,addBtn);
+                panel.appendChild(addBtn);
+                const td=document.createElement('div');td.className='flex justify-end items-center gap-3 mt-2 pr-2';
+                // td.innerHTML=`<span class="text-sm font-semibold text-[var(--text-muted)]">المجموع / Total:</span><span class="font-bold text-lg text-[var(--primary-dark)]" id="${d.key}-total" style="font-family:'Cairo',sans-serif">0</span><span class="text-sm text-[var(--text-muted)]">kcal</span>`;
+                panel.appendChild(td);pc.appendChild(panel);
+            });
+            DAYS.forEach(d=>{MEALS.forEach(m=>{const ci=document.getElementById(`${d.key}-${m.key}-cal`);if(ci)ci.addEventListener('input',()=>updateDayTotal(d.key));});});
+        }
+
+        function switchDay(dk,tab){document.querySelectorAll('.day-tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.day-panel').forEach(p=>p.classList.remove('active'));tab.classList.add('active');document.getElementById('panel-'+dk).classList.add('active');}
+        function copyFromDay1(tdk){MEALS.forEach(m=>{['food','cal'].forEach(f=>{const s=document.getElementById(`day1-${m.key}-${f}`),t=document.getElementById(`${tdk}-${m.key}-${f}`);if(s&&t)t.value=s.value;});});updateDayTotal(tdk);showToast('تم النسخ — Copied!','success');}
+        function updateDayTotal(dk){
+            let tot=0;
+            MEALS.forEach(m=>{tot+=parseInt(document.getElementById(`${dk}-${m.key}-cal`)?.value)||0;});
+            const panel=document.getElementById('panel-'+dk);
+            if(panel){panel.querySelectorAll('.extra-meal-cal').forEach(ci=>{tot+=parseInt(ci.value)||0;});}
+            const el=document.getElementById(`${dk}-total`);if(el)el.textContent=tot;
+        }
+
+        const extraMealCounters={};
+        function addExtraMeal(dk,panel,addBtn){
+            if(!extraMealCounters[dk])extraMealCounters[dk]=0;
+            extraMealCounters[dk]++;
+            const idx=extraMealCounters[dk];
+            const mealKey='extra'+idx;
+            const row=document.createElement('div');row.className='meal-row';row.style.position='relative';
+            const mealId=dk+'-'+mealKey;
+            row.innerHTML=`
+                <div><input type="text" class="form-input extra-meal-label" style="font-size:12px;padding:6px 8px;font-weight:700;color:var(--primary);" placeholder="وجبة / Meal name" value="Extra ${idx}"></div>
+                <div><label class="form-label">الأكل / Food</label><textarea class="form-input" dir="auto" rows="2" id="${mealId}-food" placeholder="اكتب الوجبة..."></textarea></div>
+                <div style="display:flex;align-items:flex-end;padding-bottom:4px;">
+                    <button onclick="this.closest('.meal-row').remove();updateDayTotal('${dk}')" style="background:none;border:1.5px solid var(--danger);color:var(--danger);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;font-weight:600;"><i class="fa-solid fa-trash"></i></button>
+                </div>`;
+            panel.insertBefore(row,addBtn);
+            showToast('تمت الإضافة — Meal added!','success');
+        }
+
+        // ===== EGYPTIAN MODULE CALCULATION =====
+        function autoCalculate(){
+            const age=parseInt(document.getElementById('clientAge').value);
+            const wt=parseFloat(document.getElementById('clientWeight').value);
+            const ht=parseFloat(document.getElementById('clientHeight').value);
+            const g=document.getElementById('clientGender').value;
+            const act=parseFloat(document.getElementById('activityLevel').value);
+            const dt=document.getElementById('dietType').value;
+            if(!age||!wt||!ht||!g){showToast('املأ العمر والوزن والطول والجنس أولاً','error');return;}
+
+            // BMI
+            const hm=ht/100;const bmi=wt/(hm*hm);
+            document.getElementById('calcBMI').value=bmi.toFixed(1);
+            let bc='';if(bmi<18.5)bc='نحافة Underweight';else if(bmi<25)bc='طبيعي Normal';else if(bmi<30)bc='زيادة Overweight';else if(bmi<35)bc='سمنة ١ Obese I';else bc='سمنة ٢+ Obese II+';
+            document.getElementById('bmiCategory').textContent=bc;
+
+            // BMR — Mifflin-St Jeor
+            let bmr;if(g==='Male')bmr=10*wt+6.25*ht-5*age+5;else bmr=10*wt+6.25*ht-5*age-161;
+            document.getElementById('calcBMR').value=Math.round(bmr);
+
+            // TDEE
+            const tdee=bmr*act;
+            document.getElementById('calcTDEE').value=Math.round(tdee);
+
+            // Target — Egyptian safe deficit (max -500, min 1200 kcal)
+            let tgt=tdee;
+            switch(dt){
+                case'lose':tgt=tdee-500;break;    // Egyptian safe max deficit
+                case'gain':tgt=tdee+400;break;
+                case'keto':tgt=tdee-400;break;
+                case'lowcarb':tgt=tdee-300;break;
+            }
+            tgt=Math.max(1200,Math.round(tgt));
+            document.getElementById('calcTarget').value=tgt;
+
+            // Water — 35ml/kg Egyptian standard + activity
+            let water=wt*0.035;
+            if(act>=1.55)water+=0.5;if(act>=1.725)water+=0.5;
+            document.getElementById('calcWater').value=water.toFixed(1);
+        }
+            // ===== MACROS — EGYPTIAN HIGH-PROTEIN MODULE =====
+            // Protein floor: min 1.6g/kg (Egyptian clinical minimum)
+        //     const minProtein = Math.ceil(wt * 1.6);
+        //     let pp,cp,fp;
+        //     switch(dt){
+        //         case'lose':     pp=35;cp=35;fp=30;break;  // High protein for satiety
+        //         case'maintain': pp=30;cp=40;fp=30;break;
+        //         case'gain':     pp=25;cp=50;fp=25;break;
+        //         case'keto':     pp=30;cp=5; fp=65;break;  // Adequate protein on keto
+        //         case'lowcarb':  pp=35;cp=20;fp=45;break;  // High protein, low carb
+        //     }
+
+        //     let protG = Math.round((tgt * pp / 100) / 4);
+        //     // Enforce Egyptian minimum 1.6g/kg
+        //     if(protG < minProtein){
+        //         const extraProteinCal = (minProtein - protG) * 4;
+        //         protG = minProtein;
+        //         // Reduce carbs to compensate
+        //         let carbG = Math.round((tgt * cp / 100) / 4);
+        //         const carbReduction = Math.round(extraProteinCal / 4);
+        //         carbG = Math.max(20, carbG - carbReduction);
+        //         document.getElementById('macroCarbs').value = carbG;
+        //     } else {
+        //         document.getElementById('macroCarbs').value = Math.round((tgt * cp / 100) / 4);
+        //     }
+
+        //     document.getElementById('macroProtein').value = protG;
+        //     document.getElementById('macroFat').value = Math.round((tgt * fp / 100) / 9);
+
+        //     showToast('تم الحساب بالمعيار المصري — Egyptian Module!','success');
+        // }
+
+        // ===== BUILD SHEET HTML =====
+        function buildSheetHTML(){
+            const v=id=>document.getElementById(id)?.value||'—';
+            const n=id=>document.getElementById(id)?.value||'';
+            const wmEN=v('watermarkEN'),wmAR=v('watermarkAR');
+            const logoSize=parseInt(document.getElementById('logoSize').value)||90;
+            const logoOpacity=parseFloat(document.getElementById('logoOpacity').value)||0.1;
+
+            let h=`<div id="sheet-page" style="width:794px;background:#fff;font-family:'Cairo','DM Sans',sans-serif;color:#1A1A1A;font-size:11pt;line-height:1.6;padding:40px 50px;position:relative;overflow:hidden;">`;
+
+            // === WATERMARK LAYER ===
+            h+=`<div style="position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0;">`;
+
+            // Logo watermark — single large centered image
+            if(uploadedLogoDataURL){
+                h+=`<img src="${uploadedLogoDataURL}" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:420px;height:420px;object-fit:contain;opacity:${logoOpacity};filter:grayscale(20%);" crossorigin="anonymous">`;
+            }
+
+            // Text watermarks
+            for(let i=0;i<6;i++){
+                const top=80+i*130;const left=-40+(i%2)*200;
+                h+=`<div style="position:absolute;top:${top}px;left:${left}px;transform:rotate(-35deg);font-size:26px;font-weight:900;color:rgba(14,107,62,0.04);white-space:nowrap;font-family:'Cairo',sans-serif;letter-spacing:2px;">${wmEN}</div>`;
+                h+=`<div style="position:absolute;top:${top+34}px;left:${left-20}px;transform:rotate(-35deg);font-size:22px;font-weight:700;color:rgba(212,168,67,0.05);white-space:nowrap;font-family:'Cairo',sans-serif;direction:rtl;">${wmAR}</div>`;
+            }
+            h+=`</div>`;
+
+            // === CONTENT ===
+            h+=`<div style="position:relative;z-index:1;">`;
+
+            // Header with logo
+            h+=`<div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #0E6B3E;padding-bottom:12px;margin-bottom:16px;">`;
+            h+=`<div style="display:flex;align-items:center;gap:14px;">`;
+            if(uploadedLogoDataURL){
+                h+=`<img src="${uploadedLogoDataURL}" style="width:65px;height:65px;object-fit:contain;border-radius:8px;" crossorigin="anonymous">`;
+            }
+            h+=`<div><div style="font-weight:900;font-size:18pt;color:#094D2C;">${v('drName')}</div>
+                <div style="font-size:9pt;color:#6B7280;">${v('drSpecialty')} ${v('drLicense')!=='—'?'| ترخيص: '+v('drLicense'):''}</div></div>`;
+            h+=`</div>`;
+            h+=`<div style="text-align:right;font-size:9pt;color:#6B7280;">
+                <div style="font-weight:700;color:#1A1A1A;font-size:10pt;">${v('clinicName')}</div>
+                <div>${v('clinicAddress')}</div><div>${v('drPhone')}</div></div>`;
+            h+=`</div>`;
+
+            // Client info
+            h+=secTitle('Client Information — بيانات العميل');
+            h+=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px 20px;font-size:10pt;">`;
+            [['Name / الاسم',v('clientName')],['Age / العمر',v('clientAge')+' years'],['Gender / الجنس',v('clientGender')],
+             ['Height / الطول',v('clientHeight')+' cm'],['Weight / الوزن',v('clientWeight')+' kg'],['Target / المستهدف',v('targetWeight')+' kg'],
+             ['Date / التاريخ',v('visitDate')],['Occupation / المهنة',v('clientOccupation')],['Follow-up / المتابعة',v('followUpDate')]
+            ].forEach(([l,val])=>{h+=`<div style="display:flex;gap:6px;padding:2px 0;"><span style="color:#6B7280;font-weight:500;white-space:nowrap;">${l}:</span><span style="font-weight:700;">${val}</span></div>`;});
+            h+=`</div>`;
+            if(n('medicalConditions'))h+=`<div style="font-size:10pt;margin-top:3px;"><span style="color:#6B7280;font-weight:500;">Medical / أمراض:</span> <span style="font-weight:600;">${v('medicalConditions')}</span></div>`;
+            if(n('foodAllergies'))h+=`<div style="font-size:10pt;margin-top:2px;"><span style="color:#6B7280;font-weight:500;">Allergies / حساسية:</span> <span style="font-weight:600;">${v('foodAllergies')}</span></div>`;
+
+            // Calculations
+            h+=secTitle('Calculations — الحسابات');
+            h+=`<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:6px 0;">`;
+            [[v('calcBMI'),'BMI',v('bmiCategory'),'#F0F4F1','#094D2C'],[v('calcBMR'),'BMR (kcal)','','#FFF9EB','#8B6914'],
+             [v('calcTDEE'),'TDEE (kcal)','','#F0F4F1','#094D2C'],[v('calcTarget'),'Target (kcal)','','#EBF5FF','#1A5276'],
+             [v('calcWater'),'Water (L)','','#FFF0F0','#C0392B']
+            ].forEach(([val,lbl,sub,bg,clr])=>{
+                h+=`<div style="text-align:center;padding:8px 4px;border-radius:8px;border:1px solid #E2DDD5;background:${bg};">
+                    <div style="font-weight:900;font-size:16pt;color:${clr};">${val}</div>
+                    <div style="font-size:7pt;color:#6B7280;text-transform:uppercase;letter-spacing:.5px;">${lbl}</div>
+                    ${sub?`<div style="font-size:7pt;color:#6B7280;">${sub}</div>`:''}</div>`;
+            });
+            h+=`</div>`;
+                // <span><strong style="color:#C0392B">Protein / بروتين:</strong> ${v('macroProtein')}g</span>
+                // <span><strong style="color:#D4A843">Carbs / كربوهيدرات:</strong> ${v('macroCarbs')}g</span>
+                // <span><strong style="color:#0E6B3E">Fat / دهون:</strong> ${v('macroFat')}g</span></div>`;
+            h+=`<div style="background:#EBF5F0;border:1px solid #0E6B3E;border-radius:8px;padding:8px 14px;margin:6px 0;font-size:10pt;display:flex;align-items:center;gap:8px;">
+                <span style="font-size:16pt;">&#128167;</span>
+                <div><strong>Water / الماء:</strong> اشرب <strong>${v('calcWater')} لتر</strong> يومياً</div></div>`;
+
+            // Diet plan
+            h+=secTitle('Diet Plan — الخطة الغذائية');
+            DAYS.forEach(day=>{
+                let has=false;MEALS.forEach(m=>{if(n(`${day.key}-${m.key}-food`))has=true;});
+                // Also check extra meals
+                const _epanel=document.getElementById('panel-'+day.key);
+                if(_epanel){_epanel.querySelectorAll('.extra-meal-label').forEach(el=>{const ta=el.closest('.meal-row')?.querySelector('textarea');if(ta&&ta.value)has=true;});}
+                if(!has)return;
+                h+=`<div style="font-weight:700;font-size:11pt;color:#fff;background:linear-gradient(135deg,#0E6B3E,#128A50);padding:5px 14px;border-radius:8px;margin:10px 0 6px;display:inline-block;">${day.label} — ${day.ar}</div>`;
+                h+=`<table style="width:100%;border-collapse:collapse;margin-bottom:6px;font-size:10pt;">
+                    <thead><tr>
+                        <th style="background:#F0F4F1;color:#094D2C;font-weight:700;padding:6px 8px;text-align:left;font-size:8pt;text-transform:uppercase;border-bottom:1.5px solid #0E6B3E;width:15%;">Meal</th>
+                        <th style="background:#F0F4F1;color:#094D2C;font-weight:700;padding:6px 8px;text-align:left;font-size:8pt;text-transform:uppercase;border-bottom:1.5px solid #0E6B3E;">Food / الأكل</th>
+                        <th style="background:#F0F4F1;color:#094D2C;font-weight:700;padding:6px 8px;text-align:center;font-size:8pt;text-transform:uppercase;border-bottom:1.5px solid #0E6B3E;width:10%;">Cal</th>
+
+                    </tr></thead><tbody>`;
+                let dtot=0;
+                MEALS.forEach(m=>{
+                    const food=n(`${day.key}-${m.key}-food`);const cal=parseInt(v(`${day.key}-${m.key}-cal`))||0;
+                    if(!food&&!cal)return;dtot+=cal;
+                    h+=`<tr><td style="padding:5px 8px;border-bottom:1px solid #EEE;font-weight:700;color:#0E6B3E;vertical-align:top;white-space:nowrap;">${m.label}<br><span style="font-size:8pt;color:#6B7280;font-weight:400;">${m.ar}</span></td>
+                        <td style="padding:5px 8px;border-bottom:1px solid #EEE;vertical-align:top;direction:auto;">${food.replace(/\n/g,'<br>')}</td>
+                        <td style="padding:5px 8px;border-bottom:1px solid #EEE;font-weight:700;text-align:center;">${cal||'—'}</td></tr>`;
+                });
+                // Extra meals added dynamically
+                const dayPanel=document.getElementById('panel-'+day.key);
+                if(dayPanel){dayPanel.querySelectorAll('.meal-row').forEach(row=>{
+                    const labelEl=row.querySelector('.extra-meal-label');
+                    if(!labelEl)return;
+                    const label=labelEl.value||'Extra';
+                    const foodEl=row.querySelector('textarea');
+                    const food=foodEl?foodEl.value:'';
+                    if(!food)return;
+                    dtot+=0;
+                    h+=`<tr><td style="padding:5px 8px;border-bottom:1px solid #EEE;font-weight:700;color:#0E6B3E;vertical-align:top;white-space:nowrap;">${label}</td>
+                        <td style="padding:5px 8px;border-bottom:1px solid #EEE;vertical-align:top;direction:auto;" colspan="2">${food.replace(/\n/g,'<br>')}</td></tr>`;
+                });}
+                h+=`<tr style="background:#F0F4F1;font-weight:900;"><td colspan="2" style="text-align:right;color:#094D2C;padding:5px 8px;">Total — المجموع</td><td style="text-align:center;color:#094D2C;font-size:12pt;padding:5px 8px;">${dtot}</td></tr>`;
+                h+=`</tbody></table>`;
+            });
+
+            // Notes
+            if(n('generalNotes')||n('snackOptions')||n('beverages')||n('avoidFoods')){
+                h+=secTitle('Notes — ملاحظات');
+                h+=`<div style="background:#FFF9EB;border:1px solid #D4A843;border-radius:8px;padding:12px 14px;font-size:10pt;">`;
+                if(n('generalNotes'))h+=`<div style="margin-bottom:6px;"><span style="font-weight:700;color:#8B6914;">Instructions / إرشادات:</span><br>${v('generalNotes').replace(/\n/g,'<br>')}</div>`;
+                if(n('snackOptions'))h+=`<div style="margin-bottom:6px;"><span style="font-weight:700;color:#8B6914;">Snacks / سناك:</span><br>${v('snackOptions').replace(/\n/g,'<br>')}</div>`;
+                if(n('beverages'))h+=`<div style="margin-bottom:6px;"><span style="font-weight:700;color:#8B6914;">Beverages / مشروبات:</span><br>${v('beverages').replace(/\n/g,'<br>')}</div>`;
+                if(n('avoidFoods'))h+=`<div><span style="font-weight:700;color:#8B6914;">Avoid / ممنوعات:</span><br>${v('avoidFoods').replace(/\n/g,'<br>')}</div>`;
+                h+=`</div>`;
+            }
+
+            // Footer
+            h+=`<div style="margin-top:20px;padding-top:10px;border-top:2px solid #E2DDD5;display:flex;justify-content:space-between;align-items:end;font-size:8pt;color:#aaa;">
+                <div>Personalized for <strong style="color:#6B7280;">${v('clientName')}</strong> — Do not share without consent.</div>
+                <div style="border-top:1px solid #ccc;width:200px;text-align:center;padding-top:4px;color:#6B7280;font-size:9pt;">Dietitian Signature — توقيع أخصائي التغذية</div></div>`;
+
+            h+=`</div></div>`;
+            return h;
+        }
+
+        function secTitle(text){
+            return `<div style="font-weight:700;font-size:13pt;color:#094D2C;margin:16px 0 8px;padding-bottom:4px;border-bottom:2px solid #0E6B3E;display:flex;align-items:center;gap:8px;">
+                <span style="display:inline-block;width:4px;height:16px;background:#D4A843;border-radius:2px;"></span>${text}</div>`;
+        }
+
+        // ===== PDF GENERATION =====
+        async function generatePDF(autoDownload=false){
+            document.getElementById('loadingOverlay').classList.add('show');
+            try{
+                const html=buildSheetHTML();
+                const ra=document.getElementById('render-area');
+                ra.innerHTML=html;
+                // Move to visible but off-screen for accurate rendering
+                ra.style.cssText='position:absolute;left:0;top:0;z-index:-1;overflow:hidden;';
+                const sheetEl=document.getElementById('sheet-page');
+                await document.fonts.ready;
+                await new Promise(r=>setTimeout(r,500));
+
+                const canvas=await html2canvas(sheetEl,{scale:2,useCORS:true,allowTaint:true,backgroundColor:'#FFFFFF',width:794,height:sheetEl.scrollHeight,logging:false,windowWidth:794});
+                ra.style.cssText='position:fixed;left:-9999px;top:0;z-index:-1;';
+
+                const {jsPDF}=window.jspdf;
+                const pageW=210,pageH=297,margin=0,usableW=pageW,usableH=pageH;
+                const imgW=usableW;
+                const imgH=(canvas.height*imgW)/canvas.width;
+                const pdf=new jsPDF('p','mm','a4');
+
+                if(imgH<=usableH){
+                    pdf.addImage(canvas.toDataURL('image/jpeg',0.95),'JPEG',margin,margin,imgW,imgH);
+                } else {
+                    let remaining=imgH,sourceY=0;
+                    while(remaining>0){
+                        if(sourceY>0)pdf.addPage();
+                        const sliceH=Math.min(usableH,remaining);
+                        const cropY=(sourceY/imgH)*canvas.height;
+                        const cropH=(sliceH/imgH)*canvas.height;
+                        const sc=document.createElement('canvas');
+                        sc.width=canvas.width;sc.height=Math.max(1,Math.round(cropH));
+                        const ctx=sc.getContext('2d');ctx.fillStyle='#FFFFFF';ctx.fillRect(0,0,sc.width,sc.height);
+                        ctx.drawImage(canvas,0,cropY,canvas.width,cropH,0,0,canvas.width,cropH);
+                        pdf.addImage(sc.toDataURL('image/jpeg',0.95),'JPEG',margin,margin,imgW,sliceH);
+                        sourceY+=sliceH;remaining-=sliceH;
+                    }
+                }
+
+                const fileName=`Diet_${document.getElementById('clientName')?.value||'Client'}_${document.getElementById('visitDate')?.value||'date'}.pdf`;
+                if(autoDownload){pdf.save(fileName);showToast('تم تحميل PDF! — PDF Downloaded!','success');}
+                else{const blob=pdf.output('blob');window.open(URL.createObjectURL(blob),'_blank');showToast('تم فتح المعاينة — Preview opened','info');}
+            }catch(err){console.error(err);showToast('حدث خطأ — Error. Try again.','error');}
+            document.getElementById('loadingOverlay').classList.remove('show');
+        }
+
+        function showToast(msg,type='info'){const t=document.getElementById('toast');const icons={success:'fa-check-circle',error:'fa-exclamation-circle',info:'fa-info-circle'};t.className=`toast ${type}`;t.innerHTML=`<i class="fa-solid ${icons[type]}"></i> ${msg}`;setTimeout(()=>t.classList.add('show'),10);setTimeout(()=>t.classList.remove('show'),3500);}
+
+        function resetForm(){if(!confirm('Reset all? / مسح كل البيانات؟'))return;document.querySelectorAll('.form-input').forEach(i=>{if(i.tagName==='SELECT')i.selectedIndex=0;else if(!i.readOnly)i.value='';});['calcBMI','calcBMR','calcTDEE','calcTarget','calcWater','macroProtein','macroCarbs','macroFat'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('bmiCategory').textContent='—';DAYS.forEach(d=>{const el=document.getElementById(`${d.key}-total`);if(el)el.textContent='0';});showToast('تم المسح — Reset','info');}
+
+        document.addEventListener('DOMContentLoaded',()=>{initDayTabs();document.getElementById('visitDate').value=new Date().toISOString().split('T')[0];});
+    </script>
+</body>
+</html>
